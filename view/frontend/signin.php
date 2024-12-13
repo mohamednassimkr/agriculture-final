@@ -23,7 +23,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = $_POST["email"];
     $password = $_POST["password"];
     
-
     do {
         // Check if the fields are empty
         if (empty($email) || empty($password)) {
@@ -46,8 +45,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         echo "Database password: " . $user['password'] . "<br>";
         echo "Entered password: $password <br>";
-        // Directly compare the entered password with the stored password (no hash verification)
-        if ($password !== $user['password']) {
+        
+        // Verify the password using password_verify
+        if (!password_verify($password, $user['password'])) {
             $errorMessage = "Incorrect password.";
             break;
         }
@@ -58,21 +58,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $_SESSION['email'] = $user['email'];
         $_SESSION['role'] = $user['role'];
           
-        echo "Database password: " . $user['password'] . "<br>";
-        echo "Entered password: $password <br>";
-        if ($password==$user['password']) {  // $user['password'] is the hashed password stored in the database
-          
-            // Redirect to user dashboard or home page
-            echo "<script>alert('Login successful!'); window.location.href =  'http://localhost/crud/smartfarmproduit2.8/view/frontend/profile.php';</script>";
-        }
+        echo "<script>alert('Login successful!'); window.location.href =  'http://localhost/tempfinal/view/frontend/profile.php';</script>";
+        
         // Redirect based on the role
         if ($user['role'] === "admin") {
             header("location: ../admin/dashboard.php");
-        } /*elseif ($user['role'] === "chef") {
-            header("location: ../chef/dashboard.php");
-        } else {
-            header("location: ../../public/front/index.html");
-        }*/
+        }
         exit;
     } while (false);
 }
@@ -144,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   <!-- Profile Image Section -->
   <div class="text-center mb-4">
           <!-- If there is a profile image, show it, otherwise display a default one -->
-          <img id="profile-img" src="<?php echo !empty($profileImage) ? 'uploads/' . $profileImage : './assets/img/person-circle.svg'; ?>" class="rounded-circle" alt="Profile_Image" width="150" height="150">
+          <img id="login_image.jpg" src="<?php echo !empty($profileImage) ? 'uploads/' . $profileImage : './assets/img/login_image.jpg'; ?>" class="rounded-circle" alt="Profile_Image" width="150" height="150">
           <br><br>
         </div>
   <br>

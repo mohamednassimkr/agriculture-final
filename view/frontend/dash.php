@@ -92,21 +92,47 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_user'])) {
     }
 }
 
-// Fetch all users from the database
-$sql = "SELECT * FROM users";
-$stmt = $connection->prepare($sql);
+// Fetch all users or search based on the query
+$searchQuery = isset($_GET['search']) ? trim($_GET['search']) : '';
+if (!empty($searchQuery)) {
+    $sql = "SELECT * FROM users WHERE 
+            prenom LIKE :search OR 
+            nom LIKE :search OR 
+            email LIKE :search OR 
+            role LIKE :search";
+    $stmt = $connection->prepare($sql);
+    $likeQuery = '%' . $searchQuery . '%';
+    $stmt->bindParam(':search', $likeQuery, PDO::PARAM_STR);
+} else {
+    $sql = "SELECT * FROM users";
+    $stmt = $connection->prepare($sql);
+}
+
 $stmt->execute();
 $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
-?>
 
+// Fetch user statistics (e.g., number of users per role)
+$sql = "SELECT role, COUNT(id) as count FROM users GROUP BY role";
+$stmt = $connection->prepare($sql);
+$stmt->execute();
+$userStats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$roles = [];
+$counts = [];
+
+foreach ($userStats as $stat) {
+    $roles[] = $stat['role'];
+    $counts[] = $stat['count'];
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - CRUD</title>
+    <title>Admin Dashboard - User Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.js Library -->
     <style>
-
+    
         /* Global Styling */
         body {
             font-family: 'Arial', sans-serif;
@@ -250,12 +276,31 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
         #edit-modal.active {
             display: block;
         }
+
+        
+
+        /* Add your custom styling here */
+        .chart-container {
+            width: 80%;
+            margin: 30px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+    
     </style>
     
 </head>
 <body>
 
     <h1>Admin Dashboard - User Management</h1>
+
+    <!-- Search Bar -->
+    <form method="GET" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" style="margin-bottom: 20px;">
+        <input type="text" name="search" placeholder="Search users by name or email" value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>" style="padding: 10px; width: 300px;">
+        <button type="submit" style="padding: 10px;">Search</button>
+    </form>
 
     <!-- Create User Form -->
     <h2>Create User</h2>
@@ -352,6 +397,10 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </form>
         <button onclick="document.getElementById('edit-modal').style.display='none'">Close</button>
     </div>
+    <div class="chart-container">
+        <h2>User Statistics by Role</h2>
+        <canvas id="userStatsChart"></canvas>
+    </div>
 
     <script>
         function editUser(id, prenom, nom, email, role) {
@@ -362,6 +411,32 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
             document.getElementById('edit-role').value = role;
             document.getElementById('edit-modal').style.display = 'block';
         }
+        
+
+        // Chart.js code to render the statistics chart
+        var ctx = document.getElementById('userStatsChart').getContext('2d');
+        var userStatsChart = new Chart(ctx, {
+            type: 'bar',  // You can change this to 'pie' or 'line' if preferred
+            data: {
+                labels: <?php echo json_encode($roles); ?>,  // Labels from database (roles)
+                datasets: [{
+                    label: 'Number of Users',
+                    data: <?php echo json_encode($counts); ?>,  // Counts from database
+                    backgroundColor: '#4caf50',  // Set color for the bars
+                    borderColor: '#45a049',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
     </script>
 </body>
 </html>

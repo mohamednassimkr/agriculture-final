@@ -144,12 +144,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <input type="password" class="form-control" name="password" id="password" required>
         </div>
         <div class="form-group">
-            <label for="role">Role</label>
-            <select name="role" class="form-control" id="role" required>
-                <option value="Client" <?= $role == "Client" ? 'selected' : '' ?>>Client</option>
-                <option value="admin" <?= $role == "admin" ? 'selected' : '' ?>>Admin</option>
-            </select>
-        </div>
+    <label for="role">Role</label>
+    <select name="role" class="form-control" id="role" required>
+        <option value="Client" <?= $role == "Client" ? 'selected' : '' ?>>Client</option>
+        <option value="Admin" <?= $role == "Admin" ? 'selected' : '' ?>>Admin</option>
+        <option value="AgriCulture" <?= $role == "AgriCulture" ? 'selected' : '' ?>>AgriCulture</option>
+        <option value="Livreur" <?= $role == "Livreur" ? 'selected' : '' ?>>Livreur</option>
+    </select>
+</div>
+
         <br>
         <button type="submit" name="signup" class="btn btn-primary w-100">Sign Up</button>
         <?php if (!empty($errorMessage)): ?>
